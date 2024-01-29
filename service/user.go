@@ -7,12 +7,14 @@ import (
 	"begingo/entity"
 	"begingo/model"
 	"errors"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserSrv interface {
 	Register(c *gin.Context, m *model.RegisterRequest) (int64, error)
+	Login(c *gin.Context, m *model.LoginRequest) (*model.UserVO, error)
 }
 type userService struct {
 	dao dao.Factory
@@ -48,4 +50,38 @@ func (u *userService) Register(c *gin.Context, m *model.RegisterRequest) (int64,
 	// 保存用户信息
 	userId, err := u.dao.Users().Create(c, user)
 	return userId, err
+}
+
+func (u *userService) Login(c *gin.Context, m *model.LoginRequest) (*model.UserVO, error) {
+	byUser, err := u.dao.Users().Get(c, map[string]interface{}{"email": m.Email})
+	if err != nil {
+		log.Log().Error("查询失败: ", err)
+		return nil, err
+	}
+	if byUser == nil {
+		log.Log().Error("用户不存在")
+		return nil, errors.New("用户不存在")
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(byUser.Password), []byte(m.Password))
+	if err != nil {
+		log.Log().Error("密码错误: ", err)
+		return nil, errors.New("密码错误")
+	}
+	userVO := &model.UserVO{
+		ID:       byUser.ID,
+		Nickname: byUser.Nickname,
+		Email:    byUser.Email,
+		Avatar:   byUser.Avatar,
+		Gender:   byUser.Gender,
+		UserRole: byUser.UserRole,
+	}
+	// 初始化session对象
+	session := sessions.Default(c)
+	// 设置session数据
+	session.Set("userLogin", userVO.ID)
+	err = session.Save()
+	if err != nil {
+		return nil, err
+	}
+	return userVO, err
 }

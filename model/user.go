@@ -14,3 +14,17 @@ type RegisterRequest struct {
 	Password      string `json:"password" validate:"required,min=6,max=40"`
 	CheckPassword string `json:"check_password" validate:"required,eqfield=Password"`
 }
+
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6,max=40"`
+}
+
+type UserVO struct {
+	ID       int64  `json:"id"`
+	Nickname string `json:"nickname"`
+	Email    string `json:"email" `
+	Avatar   string `json:"avatar" `
+	Gender   int    `json:"gender" `
+	UserRole string `json:"user_role"`
+}

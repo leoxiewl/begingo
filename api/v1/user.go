@@ -7,7 +7,6 @@ import (
 	"begingo/dao"
 	"begingo/model"
 	srv "begingo/service"
-	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,8 +35,6 @@ func (u *UserHandler) Register(c *gin.Context) {
 	// 校验参数
 	err := conf.Validate.Struct(req)
 	if err != nil {
-		fmt.Println(err.Error())
-
 		//if _, ok := err.(*validator.InvalidValidationError); ok {
 		//	fmt.Println(err)
 		//}
@@ -51,4 +48,28 @@ func (u *UserHandler) Register(c *gin.Context) {
 		return
 	}
 	response.Success(c, code.SucCommon, userId)
+}
+
+func (u *UserHandler) Login(c *gin.Context) {
+	var req model.LoginRequest
+
+	// 绑定参数
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Failed(c, code.ErrBind, "参数绑定失败")
+		return
+	}
+
+	// 校验参数
+	err := conf.Validate.Struct(req)
+	if err != nil {
+		response.Failed(c, code.ErrValidation, err.Error())
+		return
+	}
+
+	user, err := u.srv.Users().Login(c, &req)
+	if err != nil {
+		response.Failed(c, code.ErrCommon, err.Error())
+		return
+	}
+	response.Success(c, code.SucCommon, user)
 }
