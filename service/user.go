@@ -1,6 +1,7 @@
 package service
 
 import (
+	"begingo/common"
 	"begingo/common/code"
 	"begingo/common/log"
 	"begingo/dao"
@@ -16,6 +17,7 @@ type UserSrv interface {
 	Register(c *gin.Context, m *model.RegisterRequest) (int64, error)
 	Login(c *gin.Context, m *model.LoginRequest) (*model.UserVO, error)
 	Create(c *gin.Context, user *entity.User) (int64, error)
+	Delete(c *gin.Context, req *common.DeleteRequest) (int64, error)
 }
 type userService struct {
 	dao dao.Factory
@@ -99,4 +101,18 @@ func (u *userService) Create(c *gin.Context, user *entity.User) (int64, error) {
 	}
 	userId, err := u.dao.Users().Create(c, user)
 	return userId, err
+}
+
+func (u *userService) Delete(c *gin.Context, req *common.DeleteRequest) (int64, error) {
+	// 根据 id 查询记录是否存在
+	byUser, err := u.dao.Users().Get(c, map[string]interface{}{"id": req.Id})
+	if err != nil {
+		log.Log().Info("查询失败: ", err)
+	}
+	if byUser == nil {
+		log.Log().Info("用户不存在")
+		return 0, errors.New("用户不存在")
+	}
+	affectedRow, err := u.dao.Users().Delete(c, map[string]interface{}{"id": req.Id})
+	return affectedRow, err
 }

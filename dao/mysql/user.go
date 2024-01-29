@@ -23,6 +23,14 @@ func (u *users) Create(ctx context.Context, user *entity.User) (int64, error) {
 	return user.ID, nil
 }
 
+func (u *users) Delete(ctx context.Context, where map[string]interface{}) (int64, error) {
+	result := u.db.Where(where).Delete(&entity.User{})
+	if result.Error != nil {
+		log.Log().Error("delete user myerrors: ", result.Error)
+	}
+	return result.RowsAffected, result.Error
+}
+
 func (u *users) UpdateCondition(ctx context.Context, where map[string]interface{}, update map[string]interface{}) (int64, error) {
 	result := u.db.Model(&entity.User{}).Where(where).Updates(update)
 	if result.Error != nil {

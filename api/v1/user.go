@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"begingo/common"
 	"begingo/common/code"
 	"begingo/common/response"
 	"begingo/conf"
@@ -97,4 +98,20 @@ func (u *UserHandler) Create(c *gin.Context) {
 	}
 	response.Success(c, code.SucCommon, userId)
 
+}
+
+func (u *UserHandler) Delete(c *gin.Context) {
+	var req common.DeleteRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Failed(c, code.ErrBind, err.Error())
+		return
+	}
+
+	affectedRow, err := u.srv.Users().Delete(c, &req)
+	if err != nil {
+		response.Failed(c, code.ErrCommon, err.Error())
+		return
+	}
+	response.Success(c, code.SucCommon, affectedRow)
 }
