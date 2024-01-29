@@ -10,6 +10,7 @@ import (
 	"begingo/model"
 	srv "begingo/service"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 type UserHandler struct {
@@ -137,4 +138,22 @@ func (u *UserHandler) Update(c *gin.Context) {
 		return
 	}
 	response.Success(c, code.SucCommon, affectedRow)
+}
+
+func (u *UserHandler) Get(c *gin.Context) {
+
+	idParam := c.Query("id")
+
+	// Convert id to int64
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		return
+	}
+	user, err := u.srv.Users().Get(c, id)
+	if err != nil {
+		response.Failed(c, code.ErrCommon, err.Error())
+		return
+	}
+	response.Success(c, code.SucCommon, user)
+
 }

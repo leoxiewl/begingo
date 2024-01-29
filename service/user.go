@@ -21,6 +21,7 @@ type UserSrv interface {
 	Create(c *gin.Context, user *entity.User) (int64, error)
 	Delete(c *gin.Context, req *common.DeleteRequest) (int64, error)
 	Update(c *gin.Context, req *model.UserUpdateRequest) (int64, error)
+	Get(c *gin.Context, userId int64) (*model.UserVO, error)
 }
 type userService struct {
 	dao dao.Factory
@@ -159,4 +160,21 @@ func (u *userService) Update(c *gin.Context, req *model.UserUpdateRequest) (int6
 		return 0, err
 	}
 	return affectedRow, err
+}
+
+func (u *userService) Get(c *gin.Context, userId int64) (*model.UserVO, error) {
+
+	user, err := u.dao.Users().Get(c, map[string]interface{}{"id": userId})
+	if err != nil {
+		return nil, err
+	}
+	userVO := &model.UserVO{
+		ID:       user.ID,
+		Nickname: user.Nickname,
+		Email:    user.Email,
+		Avatar:   user.Avatar,
+		Gender:   user.Gender,
+		UserRole: user.UserRole,
+	}
+	return userVO, err
 }
