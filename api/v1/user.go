@@ -1,10 +1,10 @@
-package api
+package v1
 
 import (
+	"begingo/common/code"
+	"begingo/common/response"
 	"begingo/dao"
 	"begingo/model"
-	"begingo/pkg/code"
-	"begingo/util"
 	"github.com/gin-gonic/gin"
 
 	srv "begingo/service"
@@ -23,21 +23,21 @@ func NewUserHandler(store dao.Factory) *UserHandler {
 	}
 }
 
-func (u *UserHandler) Create(c *gin.Context) {
-	var req model.UserAddRequest
+func (u *UserHandler) Register(c *gin.Context) {
+	var req model.RegisterRequest
 
 	// 绑定参数
 	if err := c.ShouldBindJSON(&req); err != nil {
-		util.Failed(c, code.ErrBind, "参数绑定失败")
+		response.Failed(c, code.ErrBind, "参数绑定失败")
 		return
 	}
 
 	// 校验参数 TODO
 
-	err := u.srv.Users().Create(c, &req)
+	userId, err := u.srv.Users().Register(c, &req)
 	if err != nil {
-		util.Failed(c, code.ErrSuccess, "创建用户失败")
+		response.Failed(c, code.ErrCommon, err.Error())
 		return
 	}
-	util.Success(c, 200, "用户信息")
+	response.Success(c, code.SucCommon, userId)
 }

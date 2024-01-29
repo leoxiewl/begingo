@@ -1,7 +1,7 @@
 package server
 
 import (
-	"begingo/api"
+	v1 "begingo/api/v1"
 	"begingo/dao/mysql"
 	"github.com/gin-gonic/gin"
 	"os"
@@ -14,12 +14,12 @@ func NewRouter() *gin.Engine {
 	daoIns, _ := mysql.GetMySQLFactory(os.Getenv("MYSQL_DSN"))
 
 	// 路由
-	v1 := r.Group("/v1")
+	routerv1 := r.Group("/v1")
 	{
-		userv1 := v1.Group("/user")
+		userv1 := routerv1.Group("/user")
 		{
-			userHandler := api.NewUserHandler(daoIns)
-			userv1.POST("/add", userHandler.Create)
+			userHandler := v1.NewUserHandler(daoIns)
+			userv1.POST("/register", userHandler.Register)
 		}
 	}
 

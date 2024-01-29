@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"begingo/util"
+	"begingo/common/log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -13,5 +13,5 @@ func Init() {
 	godotenv.Load()
 
 	// 设置日志级别
-	util.BuildLogger(os.Getenv("LOG_LEVEL"))
+	log.BuildLogger(os.Getenv("LOG_LEVEL"))
 }

@@ -1,8 +1,8 @@
 package mysql
 
 import (
+	log2 "begingo/common/log"
 	"begingo/dao"
-	"begingo/util"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -29,7 +29,7 @@ var (
 	mysqlFactory dao.Factory
 )
 
-// Database 在中间件中初始化mysql链接
+// GetMySQLFactory 在中间件中初始化mysql链接
 func GetMySQLFactory(connString string) (dao.Factory, error) {
 	// 初始化GORM日志配置
 	newLogger := logger.New(
@@ -37,7 +37,7 @@ func GetMySQLFactory(connString string) (dao.Factory, error) {
 		logger.Config{
 			SlowThreshold:             time.Second, // Slow SQL threshold
 			LogLevel:                  logger.Info, // Log level(这里记得根据需求改一下)
-			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound myerrors for log
 			Colorful:                  false,       // Disable color
 		},
 	)
@@ -47,12 +47,12 @@ func GetMySQLFactory(connString string) (dao.Factory, error) {
 	})
 	// Error
 	if connString == "" || err != nil {
-		util.Log().Error("mysql lost: %v", err)
+		log2.Log().Error("mysql lost: %v", err)
 		panic(err)
 	}
 	sqlDB, err := db.DB()
 	if err != nil {
-		util.Log().Error("mysql lost: %v", err)
+		log2.Log().Error("mysql lost: %v", err)
 		panic(err)
 	}
 

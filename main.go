@@ -4,6 +4,7 @@ import (
 	"begingo/conf"
 	"begingo/server"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-playground/validator/v10"
 	"os"
 )
 
@@ -15,5 +16,8 @@ func main() {
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := server.NewRouter()
 
-	r.Run(":8888")
+	err := r.Run(":8888")
+	if err != nil {
+		return
+	}
 }
