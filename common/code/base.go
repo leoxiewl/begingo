@@ -14,6 +14,9 @@ const (
 
 	// ErrBind 参数绑定错误
 	ErrBind
+
+	// ErrValidation 参数校验错误
+	ErrValidation
 )
 
 const (

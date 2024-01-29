@@ -3,11 +3,12 @@ package v1
 import (
 	"begingo/common/code"
 	"begingo/common/response"
+	"begingo/conf"
 	"begingo/dao"
 	"begingo/model"
-	"github.com/gin-gonic/gin"
-
 	srv "begingo/service"
+	"fmt"
+	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
@@ -32,7 +33,17 @@ func (u *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// 校验参数 TODO
+	// 校验参数
+	err := conf.Validate.Struct(req)
+	if err != nil {
+		fmt.Println(err.Error())
+
+		//if _, ok := err.(*validator.InvalidValidationError); ok {
+		//	fmt.Println(err)
+		//}
+		response.Failed(c, code.ErrValidation, err.Error())
+		return
+	}
 
 	userId, err := u.srv.Users().Register(c, &req)
 	if err != nil {
