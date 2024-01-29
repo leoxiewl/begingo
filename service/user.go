@@ -15,6 +15,7 @@ import (
 type UserSrv interface {
 	Register(c *gin.Context, m *model.RegisterRequest) (int64, error)
 	Login(c *gin.Context, m *model.LoginRequest) (*model.UserVO, error)
+	Create(c *gin.Context, user *entity.User) (int64, error)
 }
 type userService struct {
 	dao dao.Factory
@@ -84,4 +85,18 @@ func (u *userService) Login(c *gin.Context, m *model.LoginRequest) (*model.UserV
 		return nil, err
 	}
 	return userVO, err
+}
+
+func (u *userService) Create(c *gin.Context, user *entity.User) (int64, error) {
+	// 判断邮箱是否注册
+	byUser, err := u.dao.Users().Get(c, map[string]interface{}{"email": user.Email})
+	if err != nil {
+		log.Log().Info("验证邮箱: ", err)
+	}
+	if byUser != nil {
+		log.Log().Info("邮箱已注册")
+		return 0, errors.New("邮箱已注册")
+	}
+	userId, err := u.dao.Users().Create(c, user)
+	return userId, err
 }

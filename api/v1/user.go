@@ -5,6 +5,7 @@ import (
 	"begingo/common/response"
 	"begingo/conf"
 	"begingo/dao"
+	"begingo/entity"
 	"begingo/model"
 	srv "begingo/service"
 	"github.com/gin-gonic/gin"
@@ -72,4 +73,28 @@ func (u *UserHandler) Login(c *gin.Context) {
 		return
 	}
 	response.Success(c, code.SucCommon, user)
+}
+
+// Create 当作代码示例，密码没有做加密处理
+func (u *UserHandler) Create(c *gin.Context) {
+	var req entity.User
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Failed(c, code.ErrBind, err.Error())
+		return
+	}
+
+	err := conf.Validate.Struct(req)
+	if err != nil {
+		response.Failed(c, code.ErrValidation, err.Error())
+		return
+	}
+
+	userId, err := u.srv.Users().Create(c, &req)
+	if err != nil {
+		response.Failed(c, code.ErrCommon, err.Error())
+		return
+	}
+	response.Success(c, code.SucCommon, userId)
+
 }

@@ -16,7 +16,7 @@ func newUsers(ds *datastore) *users {
 }
 
 func (u *users) Create(ctx context.Context, user *entity.User) (int64, error) {
-	result := u.db.Select("nickname", "email", "password").Create(&user)
+	result := u.db.Omit("create_at", "update_at").Create(&user)
 	if result.Error != nil {
 		return 0, result.Error
 	}

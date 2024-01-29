@@ -28,6 +28,7 @@ func NewRouter() *gin.Engine {
 			userHandler := v1.NewUserHandler(daoIns)
 			userv1.POST("/register", userHandler.Register)
 			userv1.POST("/login", userHandler.Login)
+			userv1.POST("/add", userHandler.Create)
 		}
 	}
 
