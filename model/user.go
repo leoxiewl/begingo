@@ -28,3 +28,11 @@ type UserVO struct {
 	Gender   int    `json:"gender" `
 	UserRole string `json:"user_role"`
 }
+
+type UserUpdateRequest struct {
+	ID       int64  `json:"id" validate:"required"`
+	Nickname string `json:"nickname" validate:"omitempty,min=2,max=20"`
+	Avatar   string `json:"avatar" validate:"omitempty,url"`
+	Gender   int    `json:"gender" validate:"omitempty,oneof=0 1 2"`
+	UserRole string `json:"user_role" validate:"omitempty"`
+}

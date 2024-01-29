@@ -4,6 +4,8 @@ import (
 	"begingo/common"
 	"begingo/common/code"
 	"begingo/common/log"
+	"begingo/common/myerrors"
+	"begingo/conf"
 	"begingo/dao"
 	"begingo/entity"
 	"begingo/model"
@@ -18,6 +20,7 @@ type UserSrv interface {
 	Login(c *gin.Context, m *model.LoginRequest) (*model.UserVO, error)
 	Create(c *gin.Context, user *entity.User) (int64, error)
 	Delete(c *gin.Context, req *common.DeleteRequest) (int64, error)
+	Update(c *gin.Context, req *model.UserUpdateRequest) (int64, error)
 }
 type userService struct {
 	dao dao.Factory
@@ -114,5 +117,46 @@ func (u *userService) Delete(c *gin.Context, req *common.DeleteRequest) (int64, 
 		return 0, errors.New("用户不存在")
 	}
 	affectedRow, err := u.dao.Users().Delete(c, map[string]interface{}{"id": req.Id})
+	return affectedRow, err
+}
+
+func (u *userService) Update(c *gin.Context, req *model.UserUpdateRequest) (int64, error) {
+	if req == nil {
+		return 0, myerrors.New("参数不能为空")
+	}
+
+	err := conf.Validate.Struct(req)
+	if err != nil {
+		return 0, err
+	}
+
+	// 根据 id 查询记录是否存在
+	byUser, err := u.dao.Users().Get(c, map[string]interface{}{"id": req.ID})
+	if err != nil {
+		log.Log().Info("查询失败: ", err)
+	}
+	if byUser == nil {
+		log.Log().Info("用户不存在")
+		return 0, errors.New("用户不存在")
+	}
+
+	// 修改用户信息
+	update := make(map[string]interface{})
+	if len(req.Nickname) > 0 {
+		update["nickname"] = req.Nickname
+	}
+	if len(req.Avatar) > 0 {
+		update["avatar"] = req.Avatar
+	}
+	if req.Gender >= 0 {
+		update["gender"] = req.Gender
+	}
+	if len(req.UserRole) > 0 {
+		update["user_role"] = req.UserRole
+	}
+	affectedRow, err := u.dao.Users().UpdateCondition(c, map[string]interface{}{"id": req.ID}, update)
+	if err != nil {
+		return 0, err
+	}
 	return affectedRow, err
 }

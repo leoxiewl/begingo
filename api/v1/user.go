@@ -115,3 +115,26 @@ func (u *UserHandler) Delete(c *gin.Context) {
 	}
 	response.Success(c, code.SucCommon, affectedRow)
 }
+
+func (u *UserHandler) Update(c *gin.Context) {
+	var req model.UserUpdateRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Failed(c, code.ErrBind, err.Error())
+		return
+	}
+
+	// 参数校验
+	err := conf.Validate.Struct(req)
+	if err != nil {
+		response.Failed(c, code.ErrValidation, err.Error())
+		return
+	}
+
+	affectedRow, err := u.srv.Users().Update(c, &req)
+	if err != nil {
+		response.Failed(c, code.ErrCommon, err.Error())
+		return
+	}
+	response.Success(c, code.SucCommon, affectedRow)
+}

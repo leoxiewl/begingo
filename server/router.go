@@ -30,6 +30,7 @@ func NewRouter() *gin.Engine {
 			userv1.POST("/login", userHandler.Login)
 			userv1.POST("/add", userHandler.Create)
 			userv1.POST("/delete", userHandler.Delete)
+			userv1.POST("/update", userHandler.Update)
 		}
 	}
 
