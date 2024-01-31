@@ -22,6 +22,7 @@ type UserSrv interface {
 	Delete(c *gin.Context, req *common.DeleteRequest) (int64, error)
 	Update(c *gin.Context, req *model.UserUpdateRequest) (int64, error)
 	Get(c *gin.Context, userId int64) (*model.UserVO, error)
+	ListPage(c *gin.Context, req *model.UserQueryRequest) (*common.PageResponse, error)
 }
 type userService struct {
 	dao dao.Factory
@@ -81,6 +82,7 @@ func (u *userService) Login(c *gin.Context, m *model.LoginRequest) (*model.UserV
 		Avatar:   byUser.Avatar,
 		Gender:   byUser.Gender,
 		UserRole: byUser.UserRole,
+		CreateAt: byUser.CreateAt,
 	}
 	// 初始化session对象
 	session := sessions.Default(c)
@@ -94,6 +96,9 @@ func (u *userService) Login(c *gin.Context, m *model.LoginRequest) (*model.UserV
 }
 
 func (u *userService) Create(c *gin.Context, user *entity.User) (int64, error) {
+	if user == nil {
+		return 0, myerrors.New("参数不能为空")
+	}
 	// 判断邮箱是否注册
 	byUser, err := u.dao.Users().Get(c, map[string]interface{}{"email": user.Email})
 	if err != nil {
@@ -108,6 +113,9 @@ func (u *userService) Create(c *gin.Context, user *entity.User) (int64, error) {
 }
 
 func (u *userService) Delete(c *gin.Context, req *common.DeleteRequest) (int64, error) {
+	if req == nil || req.Id <= 0 {
+		return 0, myerrors.New("参数错误")
+	}
 	// 根据 id 查询记录是否存在
 	byUser, err := u.dao.Users().Get(c, map[string]interface{}{"id": req.Id})
 	if err != nil {
@@ -163,7 +171,9 @@ func (u *userService) Update(c *gin.Context, req *model.UserUpdateRequest) (int6
 }
 
 func (u *userService) Get(c *gin.Context, userId int64) (*model.UserVO, error) {
-
+	if userId <= 0 {
+		return nil, errors.New("参数错误")
+	}
 	user, err := u.dao.Users().Get(c, map[string]interface{}{"id": userId})
 	if err != nil {
 		return nil, err
@@ -175,6 +185,81 @@ func (u *userService) Get(c *gin.Context, userId int64) (*model.UserVO, error) {
 		Avatar:   user.Avatar,
 		Gender:   user.Gender,
 		UserRole: user.UserRole,
+		CreateAt: user.CreateAt,
 	}
 	return userVO, err
+}
+
+func (u *userService) ListPage(c *gin.Context, req *model.UserQueryRequest) (*common.PageResponse, error) {
+	// 参数校验
+	err := conf.Validate.Struct(req)
+	if err != nil {
+		log.Log().Error("参数校验失败: ", err)
+		return nil, err
+	}
+
+	// 设定默认值
+	if req.PageRequest.Page <= 0 {
+		req.PageRequest.Page = 1
+	}
+	if req.PageRequest.PageSize <= 0 {
+		req.PageRequest.PageSize = 10
+	}
+
+	// 组装查询条件
+	where := make(map[string]interface{})
+	if req.ID > 0 {
+		where["id = ?"] = req.ID
+	}
+	if len(req.Nickname) > 0 {
+		where["nickname like ? "] = "%" + req.Nickname + "%"
+	}
+	if len(req.Email) > 0 {
+		where["email like ?"] = "%" + req.Email + "%"
+	}
+	if len(req.UserRole) > 0 {
+		where["user_role = ?"] = req.UserRole
+	}
+	if len(req.CreateAt) > 0 {
+		where["create_at = ?"] = req.CreateAt
+	}
+
+	// 查询用户总数
+	total, err := u.dao.Users().Count(c, where)
+	if err != nil {
+		log.Log().Error("查询用户总数失败: ", err)
+		return nil, err
+	}
+	if total <= 0 {
+		return nil, errors.New("查询数据为空")
+	}
+	// 查询用户列表
+	users, err := u.dao.Users().ListPage(c, where, req.PageRequest.Page, req.PageRequest.PageSize)
+	if err != nil {
+		log.Log().Error("查询用户列表失败: ", err)
+		return nil, err
+	}
+	if len(users) <= 0 {
+		return nil, errors.New("查询数据为空")
+	}
+
+	// 组装返回数据
+	var userVOs []*model.UserVO
+	for _, user := range users {
+		userVO := &model.UserVO{
+			ID:       user.ID,
+			Nickname: user.Nickname,
+			Email:    user.Email,
+			Avatar:   user.Avatar,
+			Gender:   user.Gender,
+			UserRole: user.UserRole,
+			CreateAt: user.CreateAt,
+		}
+		userVOs = append(userVOs, userVO)
+	}
+
+	return &common.PageResponse{
+		Total: total,
+		List:  userVOs,
+	}, err
 }

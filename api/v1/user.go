@@ -157,3 +157,19 @@ func (u *UserHandler) Get(c *gin.Context) {
 	response.Success(c, code.SucCommon, user)
 
 }
+
+func (u *UserHandler) ListPage(c *gin.Context) {
+	var req model.UserQueryRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Failed(c, code.ErrBind, "参数绑定失败: "+err.Error())
+		return
+	}
+
+	pageRes, err := u.srv.Users().ListPage(c, &req)
+	if err != nil {
+		response.Failed(c, code.ErrCommon, err.Error())
+		return
+	}
+	response.Success(c, code.SucCommon, pageRes)
+}

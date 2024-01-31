@@ -48,3 +48,31 @@ func (u *users) Get(ctx context.Context, where map[string]interface{}) (*entity.
 	}
 	return &user, nil
 }
+
+func (u *users) ListPage(ctx context.Context, where map[string]interface{}, page int, pageSize int) ([]*entity.User, error) {
+	var users []*entity.User
+	query := u.db.Model(&entity.User{})
+	for key, value := range where {
+		query = query.Where(key, value)
+	}
+	err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&users).Error
+	if err != nil {
+		log.Log().Error("list user errors: ", err)
+		return nil, err
+	}
+	return users, nil
+}
+
+func (u *users) Count(ctx context.Context, where map[string]interface{}) (int64, error) {
+	var count int64
+	query := u.db.Model(&entity.User{})
+	for key, value := range where {
+		query = query.Where(key, value)
+	}
+	err := query.Count(&count).Error
+	if err != nil {
+		log.Log().Error("count user errors: ", err)
+		return 0, err
+	}
+	return count, nil
+}
