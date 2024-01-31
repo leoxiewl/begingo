@@ -87,7 +87,7 @@ func (u *userService) Login(c *gin.Context, m *model.LoginRequest) (*model.UserV
 	// 初始化session对象
 	session := sessions.Default(c)
 	// 设置session数据
-	session.Set("userLogin", userVO.ID)
+	session.Set("currentUser", userVO)
 	err = session.Save()
 	if err != nil {
 		return nil, err

@@ -9,6 +9,7 @@ import (
 	"begingo/entity"
 	"begingo/model"
 	srv "begingo/service"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )
@@ -75,6 +76,44 @@ func (u *UserHandler) Login(c *gin.Context) {
 		return
 	}
 	response.Success(c, code.SucCommon, user)
+}
+
+func (u *UserHandler) GetUserLogin(c *gin.Context) {
+	session := sessions.Default(c)
+	user := session.Get("currentUser")
+	if user == nil {
+		response.Failed(c, code.ErrCommon, "用户未登录")
+	}
+	userId := user.(model.UserVO).ID
+	if userId <= 0 {
+		response.Failed(c, code.ErrCommon, "用户未登录")
+	}
+	// 查库获取用户信息，保证信息是最新的
+	user, err := u.srv.Users().Get(c, userId)
+	if err != nil {
+		response.Failed(c, code.ErrCommon, err.Error())
+		return
+	}
+
+	// 更新session
+	session.Set("currentUser", user)
+	err = session.Save()
+	if err != nil {
+		response.Failed(c, code.ErrCommon, err.Error())
+		return
+	}
+	response.Success(c, code.SucCommon, user)
+}
+
+func (u *UserHandler) Logout(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Delete("currentUser")
+	err := session.Save()
+	if err != nil {
+		response.Failed(c, code.ErrCommon, err.Error())
+		return
+	}
+	response.Success(c, code.SucCommon, nil)
 }
 
 // Create 当作代码示例，密码没有做加密处理
