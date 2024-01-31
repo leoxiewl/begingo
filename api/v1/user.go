@@ -94,14 +94,6 @@ func (u *UserHandler) GetUserLogin(c *gin.Context) {
 		response.Failed(c, code.ErrCommon, err.Error())
 		return
 	}
-
-	// 更新session
-	session.Set("currentUser", user)
-	err = session.Save()
-	if err != nil {
-		response.Failed(c, code.ErrCommon, err.Error())
-		return
-	}
 	response.Success(c, code.SucCommon, user)
 }
 

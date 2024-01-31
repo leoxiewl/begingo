@@ -86,6 +86,7 @@ func (u *userService) Login(c *gin.Context, m *model.LoginRequest) (*model.UserV
 	}
 	// 初始化session对象
 	session := sessions.Default(c)
+	session.Options(sessions.Options{MaxAge: 86400 * 7}) //单位为秒
 	// 设置session数据
 	session.Set("currentUser", userVO)
 	err = session.Save()
