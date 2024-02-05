@@ -54,6 +54,7 @@ func (u *userService) Register(c *gin.Context, m *model.RegisterRequest) (int64,
 		Email:    m.Email,
 		Password: string(bytes),
 		Nickname: m.Nickname,
+		UserRole: "user",
 	}
 	// 保存用户信息
 	userId, err := u.dao.Users().Create(c, user)
